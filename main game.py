@@ -2,7 +2,7 @@ import pygame
 import random
 
 pygame.init()
-# hi nigger
+# hi nigger45923148124781238
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game")
