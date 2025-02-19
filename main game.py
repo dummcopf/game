@@ -15,7 +15,7 @@ class Gun:
     def __init__(self, rect, color):
         self.rect = pygame.Rect(rect)
         self.color = color
-
+#ljfnjnfkjwnkwjenckj33434
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
 
