@@ -1,4 +1,3 @@
-from tkinter.ttk import Button
 
 import pygame
 import random
