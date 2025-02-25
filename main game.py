@@ -20,6 +20,7 @@ paused = False
 paused_time = 0
 running = True
 my_answer = ""
+score = 0
 
 class Button:
     def __init__(self, rect, color, number):
@@ -106,7 +107,7 @@ def math_problem(a, b):
 def spawn_enemy():
     global last_enemy_spawn_time
     color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255),)
-    enemies.append(Enemy((random.randint(WIDTH // 2 - WIDTH // 3, WIDTH // 2 + WIDTH // 3),
+    enemies.append(Enemy((random.randint(300, WIDTH // 2 + WIDTH // 3),
                           random.randint(HEIGHT // 2 - HEIGHT // 3, HEIGHT // 2 + HEIGHT // 3), 10, 10),
                          (color[0], color[1], color[2])))
     last_enemy_spawn_time = pygame.time.get_ticks()
@@ -130,9 +131,10 @@ for i in range(10):
 buttons.append(Button((90, HEIGHT / 2 + 240 , 50, 50), (0, 255, 0), "X"))
 buttons.append(Button((150, HEIGHT / 2 + 240, 50, 50), (0, 255, 0), "="))
 gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), (255, 255, 255))
-last_enemy_spawn_time = pygame.time.get_ticks()
+enemy_spawn_cooldown = 3
+last_enemy_spawn_time = pygame.time.get_ticks() - enemy_spawn_cooldown * 1000
 last_text_change_time = pygame.time.get_ticks()
-enemy_spawn_cooldown = 1.5
+
 lives = 5
 input_bar = Button((30,HEIGHT/2, 170,50), (255,0,0), "hi")
 enemies = []
@@ -170,7 +172,10 @@ while running:
                         if clicked_enemy != None:
                             if int(my_answer) == int(clicked_enemy.correct_answer):
                                 my_answer = "Correct!"
+                                pew = pygame.mixer.Sound("data/sfx/pew.mp3")
+                                pew.play()
                                 screen.fill((255,255,255))
+                                score += 100
                             else:
                                 my_answer = "Incorrect!"
                                 take_damage(1)
@@ -213,6 +218,10 @@ while running:
 
     for i in range(lives):
         screen.blit(pygame.image.load("data/sprites/heart.png"),(50 * i + 30, 0),)
+
+    score_text = font.render(str(score), True, (255, 255, 255))
+    screen.blit(score_text, (WIDTH / 2, 0))
+
     if lives <= 0:
         sys.exit()
     pygame.display.flip()
