@@ -32,8 +32,8 @@ class Button:
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
-        textfont = pygame.font.Font(None, self.rect.width)
-        text = textfont.render(str(self.number), True, (255, 255, 255))
+        textfont = pygame.font.Font(None, self.rect.height)
+        text = textfont.render(str(self.number), True, (0, 0, 0))
         screen.blit(text, self.rect)
 
 
@@ -41,6 +41,7 @@ class Gun:
     def __init__(self, rect, color):
         self.rect = pygame.Rect(rect)
         self.color = color
+
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
@@ -119,13 +120,24 @@ for i in range(10):
         j += 1
     buttons.append(Button(((i % 3) * 60 + 30, HEIGHT / 2 + j * 60, 50, 50), (0, 255, 0), i))
 buttons.append(Button((90, HEIGHT / 2 + 240 , 50, 50), (0, 255, 0), "X"))
-buttons.append(Button((150, HEIGHT / 2 + 240, 50, 50), (0, 255, 0), "enter"))
+buttons.append(Button((150, HEIGHT / 2 + 240, 50, 50), (0, 255, 0), "="))
 gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), (255, 255, 255))
 last_enemy_spawn_time = pygame.time.get_ticks()
+last_text_change_time = pygame.time.get_ticks()
 enemy_spawn_cooldown = 1.5
+input_bar = Button((30,HEIGHT/2, 170,50), (255,0,0), "hi")
 enemies = []
 while running:
     screen.fill((0, 0, 0))
+    if my_answer == "Incorrect!" or my_answer == "Correct!" or my_answer == "Out of time!":
+        input_bar.number = my_answer
+        if pygame.time.get_ticks() - last_text_change_time >= 2000:
+            print(pygame.time.get_ticks(), last_text_change_time)
+            my_answer = ""
+
+    else:
+        input_bar.number = my_answer
+
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -144,19 +156,20 @@ while running:
                 if b.rect.collidepoint(mouse_x, mouse_y):
                     if b.number == "X":
                         my_answer = ""
-                    elif b.number == "enter":
+                    elif b.number == "=":
                         paused = False
                         if clicked_enemy != None:
                             if my_answer == str(clicked_enemy.correct_answer):
-                                print("Correct!")
+                                my_answer = "Correct!"
                                 screen.fill((255,255,255))
                             else:
-                                print("Incorrect")
-                                sys.exit()
+                                my_answer = "Incorrect!"
+                            last_text_change_time = pygame.time.get_ticks()
                             enemies.remove(clicked_enemy)
-                            my_answer = ""
 
                     else:
+                        if my_answer == "Correct!" or my_answer == "Incorrect!" or my_answer == "Out of time!":
+                            my_answer = ""
                         my_answer += str(b.number)
                     print(my_answer)
 
@@ -164,8 +177,8 @@ while running:
         spawn_enemy()
     if paused and pygame.time.get_ticks() - paused_time >= 4000:
         paused = False
-        print("Out of time!")
-        sys.exit()
+        my_answer = "Out of time!"
+        last_text_change_time = pygame.time.get_ticks()
     gun.draw(screen)
     for enemy in enemies:
         enemy.grow()
@@ -180,6 +193,7 @@ while running:
         if b.rect.collidepoint(mouse_x, mouse_y):
             b.color = (0,170,0)
         b.draw(screen)
+    input_bar.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
 
