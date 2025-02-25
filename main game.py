@@ -6,6 +6,7 @@ import math
 import operator
 
 pygame.init()
+pygame.mixer.init()
 
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -111,6 +112,13 @@ def spawn_enemy():
     last_enemy_spawn_time = pygame.time.get_ticks()
 
 
+def take_damage(dmg):
+    global lives
+    lives -= dmg
+    screen.fill((255,0,0))
+    oof = pygame.mixer.Sound("data/sfx/OOF.mp3")
+    oof.play()
+
 clicked_enemy = None
 
 buttons = []
@@ -125,6 +133,7 @@ gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), (255, 255, 255))
 last_enemy_spawn_time = pygame.time.get_ticks()
 last_text_change_time = pygame.time.get_ticks()
 enemy_spawn_cooldown = 1.5
+lives = 5
 input_bar = Button((30,HEIGHT/2, 170,50), (255,0,0), "hi")
 enemies = []
 while running:
@@ -159,11 +168,13 @@ while running:
                     elif b.number == "=":
                         paused = False
                         if clicked_enemy != None:
-                            if my_answer == str(clicked_enemy.correct_answer):
+                            if int(my_answer) == int(clicked_enemy.correct_answer):
                                 my_answer = "Correct!"
                                 screen.fill((255,255,255))
                             else:
                                 my_answer = "Incorrect!"
+                                take_damage(1)
+
                             last_text_change_time = pygame.time.get_ticks()
                             enemies.remove(clicked_enemy)
 
@@ -177,8 +188,12 @@ while running:
         spawn_enemy()
     if paused and pygame.time.get_ticks() - paused_time >= 4000:
         paused = False
-        my_answer = "Out of time!"
-        last_text_change_time = pygame.time.get_ticks()
+        if my_answer != "Incorrect!" and my_answer != "Correct!":
+            my_answer = "Out of time!"
+            take_damage(1)
+            screen.fill((255,0,0))
+
+            last_text_change_time = pygame.time.get_ticks()
     gun.draw(screen)
     for enemy in enemies:
         enemy.grow()
@@ -186,6 +201,7 @@ while running:
         math_problem(random.randint(1, 50), random.randint(1, 50))
         if enemy.rect.w >= WIDTH / 4:
             enemies.remove(enemy)
+            take_damage(1)
 
     for b in buttons:
         b.color = (0,255,0)
@@ -194,6 +210,11 @@ while running:
             b.color = (0,170,0)
         b.draw(screen)
     input_bar.draw(screen)
+
+    for i in range(lives):
+        screen.blit(pygame.image.load("data/sprites/heart.png"),(50 * i + 30, 0),)
+    if lives <= 0:
+        sys.exit()
     pygame.display.flip()
     clock.tick(FPS)
 
