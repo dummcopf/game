@@ -110,7 +110,7 @@ def spawn_enemy():
     last_enemy_spawn_time = pygame.time.get_ticks()
 
 
-clicked_enemy : Enemy = Enemy((10,10,10,10), (255,255,255))
+clicked_enemy = None
 
 buttons = []
 j = 0
@@ -146,13 +146,16 @@ while running:
                         my_answer = ""
                     elif b.number == "enter":
                         paused = False
-                        if my_answer == str(clicked_enemy.correct_answer):
-                            print("Correct!")
-                        else:
-                            print("Incorrect")
-                            sys.exit()
-                        enemies.remove(clicked_enemy)
-                        my_answer = ""
+                        if clicked_enemy != None:
+                            if my_answer == str(clicked_enemy.correct_answer):
+                                print("Correct!")
+                                screen.fill((255,255,255))
+                            else:
+                                print("Incorrect")
+                                sys.exit()
+                            enemies.remove(clicked_enemy)
+                            my_answer = ""
+
                     else:
                         my_answer += str(b.number)
                     print(my_answer)
@@ -172,6 +175,10 @@ while running:
             enemies.remove(enemy)
 
     for b in buttons:
+        b.color = (0,255,0)
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if b.rect.collidepoint(mouse_x, mouse_y):
+            b.color = (0,170,0)
         b.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
