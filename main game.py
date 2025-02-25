@@ -170,12 +170,19 @@ while running:
                     elif b.number == "=":
                         paused = False
                         if clicked_enemy != None:
-                            if int(my_answer) == int(clicked_enemy.correct_answer):
+                            try:
+                                ans = int(my_answer)
+                            except ValueError as e:
+                                print(e)
+                                ans = -999
+                            if ans == int(clicked_enemy.correct_answer):
                                 my_answer = "Correct!"
                                 pew = pygame.mixer.Sound("data/sfx/pew.mp3")
                                 pew.play()
                                 screen.fill((255,255,255))
                                 score += 100
+                            elif my_answer == "Out of time!":
+                                print("e")
                             else:
                                 my_answer = "Incorrect!"
                                 take_damage(1)
@@ -197,6 +204,7 @@ while running:
             my_answer = "Out of time!"
             take_damage(1)
             screen.fill((255,0,0))
+            enemies.remove(clicked_enemy)
 
             last_text_change_time = pygame.time.get_ticks()
     gun.draw(screen)
