@@ -170,19 +170,20 @@ while running:
                     elif b.number == "=":
                         paused = False
                         if clicked_enemy != None:
-                            if int(my_answer) == int(clicked_enemy.correct_answer):
-                                my_answer = "Correct!"
-                                pew = pygame.mixer.Sound("data/sfx/pew.mp3")
-                                pew.play()
-                                screen.fill((255,255,255))
-                                score += 100
-                            else:
-                                my_answer = "Incorrect!"
-                                take_damage(1)
+                            if my_answer != "Correct!" and my_answer != "Incorrect!" and my_answer != "Out of time!":
+                                if int(my_answer) == int(clicked_enemy.correct_answer):
+                                    my_answer = "Correct!"
+                                    pew = pygame.mixer.Sound("data/sfx/pew.mp3")
+                                    pew.play()
+                                    screen.fill((255,255,255))
+                                    score += 100
+                                else:
+                                    my_answer = "Incorrect!"
+                                    take_damage(1)
 
-                            last_text_change_time = pygame.time.get_ticks()
-                            enemies.remove(clicked_enemy)
-
+                                last_text_change_time = pygame.time.get_ticks()
+                                enemies.remove(clicked_enemy)
+                            
                     else:
                         if my_answer == "Correct!" or my_answer == "Incorrect!" or my_answer == "Out of time!":
                             my_answer = ""
