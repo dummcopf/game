@@ -181,6 +181,7 @@ while running:
                                     my_answer = "Incorrect!"
                                     take_damage(1)
 
+
                                 last_text_change_time = pygame.time.get_ticks()
                                 enemies.remove(clicked_enemy)
                             
@@ -198,7 +199,7 @@ while running:
             my_answer = "Out of time!"
             take_damage(1)
             screen.fill((255,0,0))
-
+            enemies.remove(clicked_enemy)
             last_text_change_time = pygame.time.get_ticks()
     gun.draw(screen)
     for enemy in enemies:
