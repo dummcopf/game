@@ -28,6 +28,7 @@ thruster_hum.set_volume(0.5)
 thruster_channel = pygame.mixer.find_channel()
 thruster_channel.play(thruster_hum, loops=-1)
 
+game_over = False
 
 
 class Button:
@@ -37,6 +38,7 @@ class Button:
         self.number = number
         self.pressed = False
         self.img = pygame.image.load(f"data/sprites/buttons/{self.pressed}.png")
+
 
 
     def is_pressed(self):
@@ -100,6 +102,7 @@ class Enemy:
         self.text = font.render(self.problem[0], True, (255, 255, 255))
         i = random.randint(0,2)
         self.img = pygame.image.load(f"data/sprites/asteroids/asteroid{i}.png")
+        self.img = pygame.transform.rotate(self.img, random.randint(0,360))
 
     def grow(self):
         global paused
@@ -179,100 +182,132 @@ input_bar = Button((30, HEIGHT / 2, 170, 50), (255, 0, 0), "hi")
 enemies = []
 bg_image = pygame.image.load("data/sprites/BG/bg.jpg")
 bg_image = pygame.transform.scale(bg_image, (WIDTH,HEIGHT))
+retry_image = pygame.image.load("data/sprites/buttons/False.png")
 while running:
     screen.fill((0, 0, 0))
     screen.blit(bg_image, (0,0))
-    if my_answer == "Incorrect!" or my_answer == "Correct!" or my_answer == "Out of time!":
-        input_bar.number = my_answer
-        if pygame.time.get_ticks() - last_text_change_time >= 2000:
-            my_answer = ""
+
+    if game_over:
+        thruster_channel.pause()
+        game_over_font = pygame.font.Font(None, 200)
+        score_font = pygame.font.Font(None, 50)
+        game_over_retry = pygame.rect.Rect(WIDTH / 2 - 400, HEIGHT / 2 - 100, 800,200)
+        retry_image = pygame.transform.scale(retry_image, (game_over_retry.w,  game_over_retry.h))
+        screen.blit(retry_image, game_over_retry)
+        retryText = game_over_font.render("Retry?", True, (255, 255, 255))
+        screen.blit(retryText, (game_over_retry.x - retryText.get_width() // 2 + game_over_retry.w // 2, game_over_retry.y - retryText.get_height() // 2 + game_over_retry.h // 2))
+        gameOvertext = game_over_font.render("Game Over!", True, (255, 255, 255))
+        score_text = score_font.render(f"Score : {str(score)}", True, (255, 255, 255))
+
+        screen.blit(gameOvertext, (WIDTH / 2 - gameOvertext.get_width() / 2, 0))
+        screen.blit(score_text, (WIDTH / 2 - score_text.get_width() / 2, gameOvertext.get_height() + 30))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONUP:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                if game_over_retry.collidepoint(mouse_x,mouse_y):
+                    lives = 5
+                    game_over = False
+                    score = 0
+                    thruster_channel.unpause()
+                    enemies.clear()
+
 
     else:
-        input_bar.number = my_answer
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        if my_answer == "Incorrect!" or my_answer == "Correct!" or my_answer == "Out of time!":
+            input_bar.number = my_answer
+            if pygame.time.get_ticks() - last_text_change_time >= 2000:
+                my_answer = ""
 
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            for enemy in enemies:
-                if enemy.rect.collidepoint(mouse_x, mouse_y) and not paused:
-                    paused = True
-                    thruster_channel.pause()
-                    paused_time = pygame.time.get_ticks()
-                    clicked_enemy = enemy
-        elif event.type == pygame.MOUSEBUTTONUP:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            for b in buttons:
-                if b.rect.collidepoint(mouse_x, mouse_y):
-                    if b.number == "X":
-                        my_answer = ""
-                    elif b.number == "=":
-                        paused = False
-                        thruster_channel.unpause()
-                        if clicked_enemy in enemies:
-                            try:
-                                ans = int(my_answer)
-                            except ValueError as e:
-                                ans = -999
-                            if ans == int(clicked_enemy.correct_answer):
-                                my_answer = "Correct!"
-                                pew = pygame.mixer.Sound("data/sfx/pew.mp3")
-                                pew.play()
-                                screen.fill((255, 255, 255))
-                                score += 100
-                            else:
-                                my_answer = "Incorrect!"
-                                take_damage(1)
+        else:
+            input_bar.number = my_answer
 
-                            last_text_change_time = pygame.time.get_ticks()
-                            enemies.remove(clicked_enemy)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-                    else:
-                        if my_answer == "Correct!" or my_answer == "Incorrect!" or my_answer == "Out of time!":
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                for enemy in enemies:
+                    if enemy.rect.collidepoint(mouse_x, mouse_y) and not paused:
+                        paused = True
+                        thruster_channel.pause()
+                        paused_time = pygame.time.get_ticks()
+                        clicked_enemy = enemy
+            elif event.type == pygame.MOUSEBUTTONUP:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                for b in buttons:
+                    if b.rect.collidepoint(mouse_x, mouse_y):
+                        if b.number == "X":
                             my_answer = ""
-                        my_answer += str(b.number)
+                        elif b.number == "=":
+                            paused = False
+                            thruster_channel.unpause()
+                            if clicked_enemy in enemies:
+                                try:
+                                    ans = int(my_answer)
+                                except ValueError as e:
+                                    ans = -999
+                                if ans == int(clicked_enemy.correct_answer):
+                                    my_answer = "Correct!"
+                                    pew = pygame.mixer.Sound("data/sfx/pew.mp3")
+                                    pew.play()
+                                    screen.fill((255, 255, 255))
+                                    score += 100
+                                else:
+                                    my_answer = "Incorrect!"
+                                    take_damage(1)
 
-    if not paused and pygame.time.get_ticks() - last_enemy_spawn_time >= enemy_spawn_cooldown * 1000:
-        spawn_enemy()
-    if paused and pygame.time.get_ticks() - paused_time >= 5000:
-        paused = False
-        if my_answer != "Incorrect!" and my_answer != "Correct!":
-            my_answer = "Out of time!"
-            take_damage(1)
-            screen.fill((255, 0, 0))
-            enemies.remove(clicked_enemy)
+                                last_text_change_time = pygame.time.get_ticks()
+                                enemies.remove(clicked_enemy)
 
-            last_text_change_time = pygame.time.get_ticks()
-    for enemy in enemies:
-        enemy.grow()
-        enemy.draw(screen)
-        math_problem(random.randint(1, 50), random.randint(1, 50))
-        if enemy.rect.w >= WIDTH / 4:
-            enemies.remove(enemy)
-            take_damage(1)
+                        else:
+                            if my_answer == "Correct!" or my_answer == "Incorrect!" or my_answer == "Out of time!":
+                                my_answer = ""
+                            my_answer += str(b.number)
 
-    gun.draw(screen)
-    for b in buttons:
-        b.pressed = False
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        if b.rect.collidepoint(mouse_x, mouse_y):
-            b.pressed = True
-        b.draw(screen)
-    input_bar.draw(screen)
+        if not paused and pygame.time.get_ticks() - last_enemy_spawn_time >= enemy_spawn_cooldown * 1000:
+            spawn_enemy()
+        if paused and pygame.time.get_ticks() - paused_time >= 5000:
+            paused = False
+            if my_answer != "Incorrect!" and my_answer != "Correct!":
+                my_answer = "Out of time!"
+                take_damage(1)
+                screen.fill((255, 0, 0))
+                enemies.remove(clicked_enemy)
 
-    for i in range(lives):
-        screen.blit(pygame.image.load("data/sprites/heart.png"), (50 * i + 30, 0), )
+                last_text_change_time = pygame.time.get_ticks()
+        for enemy in enemies:
+            enemy.grow()
+            enemy.draw(screen)
+            math_problem(random.randint(1, 50), random.randint(1, 50))
+            if enemy.rect.w >= WIDTH / 4:
+                enemies.remove(enemy)
+                take_damage(1)
+
+        gun.draw(screen)
+        for b in buttons:
+            b.pressed = False
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if b.rect.collidepoint(mouse_x, mouse_y):
+                b.pressed = True
+            b.draw(screen)
+        input_bar.draw(screen)
+
+        for i in range(lives):
+            screen.blit(pygame.image.load("data/sprites/heart.png"), (50 * i + 30, 0), )
 
 
-    score_font = pygame.font.Font(None, 100)
+        score_font = pygame.font.Font(None, 100)
 
-    score_text = score_font.render(str(score), True, (255, 255, 255))
-    screen.blit(score_text, (WIDTH / 2 - score_text.get_width() / 2, 0))
+        score_text = score_font.render(str(score), True, (255, 255, 255))
+        screen.blit(score_text, (WIDTH / 2 - score_text.get_width() / 2, 0))
 
-    if lives <= 0:
-        sys.exit()
+        if lives <= 0:
+            game_over = True
+            paused = False
     pygame.display.flip()
     clock.tick(FPS)
 
