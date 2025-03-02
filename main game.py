@@ -8,8 +8,7 @@ import operator
 pygame.init()
 pygame.mixer.init()
 
-
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1600, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game")
 
@@ -22,6 +21,14 @@ paused_time = 0
 running = True
 my_answer = ""
 score = 0
+
+thruster_hum = pygame.mixer.Sound("data/sfx/Thruster.mp3")
+thruster_hum.set_volume(0.5)
+
+thruster_channel = pygame.mixer.find_channel()
+thruster_channel.play(thruster_hum, loops=-1)
+
+
 
 class Button:
     def __init__(self, rect, color, number):
@@ -47,21 +54,38 @@ class Gun:
         self.folder = folder
         self.side = "Front"
         self.img = pygame.image.load(f"{self.folder}/{self.side}.png")
-
+        self.rotation = 0
+        self.mouse_x_offset = 0
+        self.mouse_y_offset = 0
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
-        surface.blit(self.img, self.rect)
+        mouse_x, mouse_y = pygame.mouse.get_pos()
 
+        if not paused:
+            if mouse_x <= WIDTH / 2 - WIDTH / 4:
+                self.side = "Left"
+            elif mouse_x >= WIDTH / 2 + WIDTH / 4:
+                self.side = "Right"
+            else:
+                self.side = "Front"
+            self.mouse_x_offset = (WIDTH / 2 - mouse_x) // 10
+            self.mouse_y_offset = -(HEIGHT / 2 - mouse_y) // 10
+            self.rotation = (WIDTH / 2 - mouse_x) // 100
+        img = pygame.image.load(f"{self.folder}/{self.side}.png")
+        self.img = pygame.transform.rotate(img,self.rotation % 360)
+
+        x = WIDTH / 2 -self.img.get_width() / 2 + self.mouse_x_offset
+        y = HEIGHT / 2 - self.img.get_height() / 2 + HEIGHT / 4 + self.mouse_y_offset
+
+        surface.blit(self.img, (x,y))
 
 
 class Enemy:
     def __init__(self, rect, color):
         middle = (WIDTH / 2, HEIGHT / 2)
         self.rect = pygame.Rect(rect)
-        # print(self.rect.x,self.rect.y)
         self.color = color
-        self.grow_speed = 0.2
+        self.grow_speed = 0
         self.original_size = self.rect.size
         self.x = self.rect.x
         self.y = self.rect.y
@@ -74,6 +98,7 @@ class Enemy:
     def grow(self):
         global paused
         if not paused:
+            self.grow_speed += 0.03
             self.h += 2 * self.grow_speed
             self.w += 2 * self.grow_speed
             self.x -= self.grow_speed
@@ -113,8 +138,9 @@ def math_problem(a, b):
 def spawn_enemy():
     global last_enemy_spawn_time
     color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255),)
-    enemies.append(Enemy((random.randint(300, WIDTH // 2 + WIDTH // 3),
-                          random.randint(HEIGHT // 2 - HEIGHT // 3, HEIGHT // 2 + HEIGHT // 3), 10, 10),
+
+    enemies.insert(0,Enemy((random.randint(300, WIDTH // 2 + WIDTH // 3),
+                          random.randint(HEIGHT // 2 - HEIGHT // 3, HEIGHT // 2), 10, 10),
                          (color[0], color[1], color[2])))
     last_enemy_spawn_time = pygame.time.get_ticks()
 
@@ -122,9 +148,10 @@ def spawn_enemy():
 def take_damage(dmg):
     global lives
     lives -= dmg
-    screen.fill((255,0,0))
+    screen.fill((255, 0, 0))
     oof = pygame.mixer.Sound("data/sfx/OOF.mp3")
     oof.play()
+
 
 clicked_enemy = None
 
@@ -134,27 +161,25 @@ for i in range(10):
     if i % 3 == 0:
         j += 1
     buttons.append(Button(((i % 3) * 60 + 30, HEIGHT / 2 + j * 60, 50, 50), (0, 255, 0), i))
-buttons.append(Button((90, HEIGHT / 2 + 240 , 50, 50), (0, 255, 0), "X"))
+buttons.append(Button((90, HEIGHT / 2 + 240, 50, 50), (0, 255, 0), "X"))
 buttons.append(Button((150, HEIGHT / 2 + 240, 50, 50), (0, 255, 0), "="))
-gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), "data/sprites/Space Ship",(255, 255, 255))
+gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), "data/sprites/Space Ship", (255, 255, 255))
 enemy_spawn_cooldown = 3
 last_enemy_spawn_time = pygame.time.get_ticks() - enemy_spawn_cooldown * 1000
 last_text_change_time = pygame.time.get_ticks()
 
 lives = 5
-input_bar = Button((30,HEIGHT/2, 170,50), (255,0,0), "hi")
+input_bar = Button((30, HEIGHT / 2, 170, 50), (255, 0, 0), "hi")
 enemies = []
 while running:
     screen.fill((0, 0, 0))
     if my_answer == "Incorrect!" or my_answer == "Correct!" or my_answer == "Out of time!":
         input_bar.number = my_answer
         if pygame.time.get_ticks() - last_text_change_time >= 2000:
-            print(pygame.time.get_ticks(), last_text_change_time)
             my_answer = ""
 
     else:
         input_bar.number = my_answer
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -165,6 +190,7 @@ while running:
             for enemy in enemies:
                 if enemy.rect.collidepoint(mouse_x, mouse_y) and not paused:
                     paused = True
+                    thruster_channel.pause()
                     paused_time = pygame.time.get_ticks()
                     clicked_enemy = enemy
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -175,20 +201,18 @@ while running:
                         my_answer = ""
                     elif b.number == "=":
                         paused = False
-                        if clicked_enemy != None:
+                        thruster_channel.unpause()
+                        if clicked_enemy in enemies:
                             try:
                                 ans = int(my_answer)
                             except ValueError as e:
-                                print(e)
                                 ans = -999
                             if ans == int(clicked_enemy.correct_answer):
                                 my_answer = "Correct!"
                                 pew = pygame.mixer.Sound("data/sfx/pew.mp3")
                                 pew.play()
-                                screen.fill((255,255,255))
+                                screen.fill((255, 255, 255))
                                 score += 100
-                            elif my_answer == "Out of time!":
-                                print("e")
                             else:
                                 my_answer = "Incorrect!"
                                 take_damage(1)
@@ -200,20 +224,18 @@ while running:
                         if my_answer == "Correct!" or my_answer == "Incorrect!" or my_answer == "Out of time!":
                             my_answer = ""
                         my_answer += str(b.number)
-                    print(my_answer)
 
     if not paused and pygame.time.get_ticks() - last_enemy_spawn_time >= enemy_spawn_cooldown * 1000:
         spawn_enemy()
-    if paused and pygame.time.get_ticks() - paused_time >= 4000:
+    if paused and pygame.time.get_ticks() - paused_time >= 5000:
         paused = False
         if my_answer != "Incorrect!" and my_answer != "Correct!":
             my_answer = "Out of time!"
             take_damage(1)
-            screen.fill((255,0,0))
+            screen.fill((255, 0, 0))
             enemies.remove(clicked_enemy)
 
             last_text_change_time = pygame.time.get_ticks()
-    gun.draw(screen)
     for enemy in enemies:
         enemy.grow()
         enemy.draw(screen)
@@ -222,19 +244,23 @@ while running:
             enemies.remove(enemy)
             take_damage(1)
 
+    gun.draw(screen)
     for b in buttons:
-        b.color = (0,255,0)
+        b.color = (0, 255, 0)
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if b.rect.collidepoint(mouse_x, mouse_y):
-            b.color = (0,170,0)
+            b.color = (0, 170, 0)
         b.draw(screen)
     input_bar.draw(screen)
 
     for i in range(lives):
-        screen.blit(pygame.image.load("data/sprites/heart.png"),(50 * i + 30, 0),)
+        screen.blit(pygame.image.load("data/sprites/heart.png"), (50 * i + 30, 0), )
 
-    score_text = font.render(str(score), True, (255, 255, 255))
-    screen.blit(score_text, (WIDTH / 2, 0))
+
+    score_font = pygame.font.Font(None, 100)
+
+    score_text = score_font.render(str(score), True, (255, 255, 255))
+    screen.blit(score_text, (WIDTH / 2 - score_text.get_width() / 2, 0))
 
     if lives <= 0:
         sys.exit()
