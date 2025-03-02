@@ -51,7 +51,7 @@ class Gun:
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
-        surface.blit()
+        surface.blit(self.img, self.rect)
 
 
 
