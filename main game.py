@@ -15,7 +15,7 @@ pygame.display.set_caption("Game")
 font = pygame.font.Font(None, 36)
 
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 240
 paused = False
 paused_time = 0
 running = True
@@ -35,16 +35,21 @@ class Button:
         self.rect = pygame.Rect(rect)
         self.color = color
         self.number = number
+        self.pressed = False
+        self.img = pygame.image.load(f"data/sprites/buttons/{self.pressed}.png")
+
 
     def is_pressed(self):
         global my_answer
         my_answer = self.number
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
+
+        self.img = pygame.transform.scale(self.img, (self.rect.width, self.rect.height))
+        surface.blit(self.img,self.rect)
         textfont = pygame.font.Font(None, self.rect.height)
-        text = textfont.render(str(self.number), True, (0, 0, 0))
-        screen.blit(text, self.rect)
+        text = textfont.render(str(self.number), True, (255, 255, 255))
+        screen.blit(text, (self.rect.x + self.rect.w / 2 - text.get_width() // 2, self.rect.y + self.rect.h / 2 - text.get_height() // 2))
 
 
 class Gun:
@@ -82,7 +87,6 @@ class Gun:
 
 class Enemy:
     def __init__(self, rect, color):
-        middle = (WIDTH / 2, HEIGHT / 2)
         self.rect = pygame.Rect(rect)
         self.color = color
         self.grow_speed = 0
@@ -94,6 +98,8 @@ class Enemy:
         self.problem = math_problem(random.randint(1, 10), random.randint(1, 10))
         self.correct_answer = self.problem[1]
         self.text = font.render(self.problem[0], True, (255, 255, 255))
+        i = random.randint(0,2)
+        self.img = pygame.image.load(f"data/sprites/asteroids/asteroid{i}.png")
 
     def grow(self):
         global paused
@@ -110,9 +116,9 @@ class Enemy:
             self.rect.y = math.floor(self.y)
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
-
-        textfont = pygame.font.Font(None, self.rect.width)
+        img = pygame.transform.scale(self.img, (self.rect.w, self.rect.h))
+        surface.blit(img, self.rect)
+        textfont = pygame.font.Font(None, self.rect.height // 2)
         self.text = textfont.render(self.problem[0], True, (255, 255, 255))
         screen.blit(self.text, (self.rect.x + self.rect.w / 2 - self.text.get_width() / 2,
                                 self.rect.y + self.rect.h / 2 - self.text.get_height() / 2))
@@ -171,8 +177,11 @@ last_text_change_time = pygame.time.get_ticks()
 lives = 5
 input_bar = Button((30, HEIGHT / 2, 170, 50), (255, 0, 0), "hi")
 enemies = []
+bg_image = pygame.image.load("data/sprites/BG/bg.jpg")
+bg_image = pygame.transform.scale(bg_image, (WIDTH,HEIGHT))
 while running:
     screen.fill((0, 0, 0))
+    screen.blit(bg_image, (0,0))
     if my_answer == "Incorrect!" or my_answer == "Correct!" or my_answer == "Out of time!":
         input_bar.number = my_answer
         if pygame.time.get_ticks() - last_text_change_time >= 2000:
@@ -246,10 +255,10 @@ while running:
 
     gun.draw(screen)
     for b in buttons:
-        b.color = (0, 255, 0)
+        b.pressed = False
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if b.rect.collidepoint(mouse_x, mouse_y):
-            b.color = (0, 170, 0)
+            b.pressed = True
         b.draw(screen)
     input_bar.draw(screen)
 
