@@ -136,7 +136,7 @@ for i in range(10):
     buttons.append(Button(((i % 3) * 60 + 30, HEIGHT / 2 + j * 60, 50, 50), (0, 255, 0), i))
 buttons.append(Button((90, HEIGHT / 2 + 240 , 50, 50), (0, 255, 0), "X"))
 buttons.append(Button((150, HEIGHT / 2 + 240, 50, 50), (0, 255, 0), "="))
-gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), (255, 255, 255))
+gun = Gun((WIDTH // 2 - 25, HEIGHT // 2 + 250, 50, 50), "data/sprites/Space Ship",(255, 255, 255))
 enemy_spawn_cooldown = 3
 last_enemy_spawn_time = pygame.time.get_ticks() - enemy_spawn_cooldown * 1000
 last_text_change_time = pygame.time.get_ticks()
