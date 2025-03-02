@@ -297,7 +297,7 @@ while running:
         input_bar.draw(screen)
 
         for i in range(lives):
-            screen.blit(pygame.image.load("data/sprites/heart.png"), (50 * i + 30, 0), )
+            screen.blit(pygame.image.load("data/sprites/heart.png"), (63 * i + 30, 0), )
 
 
         score_font = pygame.font.Font(None, 100)
