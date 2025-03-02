@@ -23,6 +23,8 @@ my_answer = ""
 score = 0
 
 thruster_hum = pygame.mixer.Sound("data/sfx/Thruster.mp3")
+button_sfx = pygame.mixer.Sound("data/sfx/Button.mp3")
+ticking_sfx = pygame.mixer.Sound("data/sfx/ticking.mp3")
 thruster_hum.set_volume(0.5)
 
 thruster_channel = pygame.mixer.find_channel()
@@ -207,11 +209,13 @@ while running:
             if event.type == pygame.MOUSEBUTTONUP:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 if game_over_retry.collidepoint(mouse_x,mouse_y):
+
                     lives = 5
                     game_over = False
                     score = 0
                     thruster_channel.unpause()
                     enemies.clear()
+                    button_sfx.play()
 
 
     else:
@@ -232,6 +236,7 @@ while running:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 for enemy in enemies:
                     if enemy.rect.collidepoint(mouse_x, mouse_y) and not paused:
+                        ticking_sfx.play()
                         paused = True
                         thruster_channel.pause()
                         paused_time = pygame.time.get_ticks()
@@ -242,8 +247,10 @@ while running:
                     if b.rect.collidepoint(mouse_x, mouse_y):
                         if b.number == "X":
                             my_answer = ""
+                            button_sfx.play()
                         elif b.number == "=":
                             paused = False
+                            ticking_sfx.stop()
                             thruster_channel.unpause()
                             if clicked_enemy in enemies:
                                 try:
@@ -264,6 +271,7 @@ while running:
                                 enemies.remove(clicked_enemy)
 
                         else:
+                            button_sfx.play()
                             if my_answer == "Correct!" or my_answer == "Incorrect!" or my_answer == "Out of time!":
                                 my_answer = ""
                             my_answer += str(b.number)
