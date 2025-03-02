@@ -8,6 +8,7 @@ import operator
 pygame.init()
 pygame.mixer.init()
 
+
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game")
@@ -40,13 +41,18 @@ class Button:
 
 
 class Gun:
-    def __init__(self, rect, color):
+    def __init__(self, rect, folder, color):
         self.rect = pygame.Rect(rect)
         self.color = color
+        self.folder = folder
+        self.side = "Front"
+        self.img = pygame.image.load(f"{self.folder}/{self.side}.png")
 
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
+        surface.blit()
+
 
 
 class Enemy:
