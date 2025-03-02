@@ -10,7 +10,8 @@ pygame.mixer.init()
 
 WIDTH, HEIGHT = 1600, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Game")
+pygame.display.set_caption("משחק חוויתי במתמטיקה")
+pygame.display.set_icon(pygame.image.load("data/icon.png"))
 
 font = pygame.font.Font(None, 36)
 
