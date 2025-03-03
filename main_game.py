@@ -279,7 +279,7 @@ while running:
 
         if not paused and pygame.time.get_ticks() - last_enemy_spawn_time >= enemy_spawn_cooldown * 1000:
             spawn_enemy()
-        if paused and pygame.time.get_ticks() - paused_time >= 5000:
+        if paused and pygame.time.get_ticks() - paused_time >= 10000:
             paused = False
             if my_answer != "Incorrect!" and my_answer != "Correct!":
                 my_answer = "Out of time!"
