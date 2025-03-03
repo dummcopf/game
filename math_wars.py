@@ -1,4 +1,3 @@
-import sys
 
 import pygame
 import random
@@ -10,13 +9,13 @@ pygame.mixer.init()
 
 WIDTH, HEIGHT = 1600, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("משחק חוויתי במתמטיקה")
+pygame.display.set_caption("Math Wars")
 pygame.display.set_icon(pygame.image.load("data/icon.png"))
 
 font = pygame.font.Font(None, 36)
 
 clock = pygame.time.Clock()
-FPS = 240
+FPS = 60
 paused = False
 paused_time = 0
 running = True
